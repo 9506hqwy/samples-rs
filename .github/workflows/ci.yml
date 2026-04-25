@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+    tags-ignore: [ '**' ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu:
+    uses: 9506hqwy/actions/.github/workflows/rust-ci-ubuntu.yml@main
+
+  windows:
+    uses: 9506hqwy/actions/.github/workflows/rust-ci-windows.yml@main
