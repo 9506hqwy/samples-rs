@@ -1,11 +1,12 @@
 pub mod error;
 pub mod model;
 pub mod package;
+pub mod template;
 
 use axum::Json;
 use axum::body::Body;
 use axum::extract::{Path, State};
-use axum::http::header::CONTENT_TYPE;
+use axum::http::header::{ACCEPT, CONTENT_TYPE, HOST};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use chrono::format::SecondsFormat;
@@ -22,6 +23,7 @@ use tokio::sync::Mutex;
 use tokio_stream::StreamExt;
 use tokio_util::io::ReaderStream;
 
+const HTML_TYPE: &str = "application/vnd.pypi.simple.v1+html";
 const JSON_TYPE: &str = "application/vnd.pypi.simple.v1+json";
 
 static PROJECT_NORMALIZE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[-_.]+").unwrap());
@@ -33,46 +35,68 @@ pub struct AppState {
     pub debug: bool,
 }
 
-pub async fn simple(State(state): State<AppState>) -> (HeaderMap, Json<model::SimpleResponse>) {
-    let response = model::SimpleResponse {
-        meta: model::SimpleMetadata {
-            api_version: "1.4".to_owned(),
-        },
-        projects: projects(&state).await,
-    };
+pub async fn simple(State(state): State<AppState>, headers: HeaderMap) -> impl IntoResponse {
+    let accept = get_header_value(&headers, ACCEPT.as_str(), JSON_TYPE);
+
+    let projects = projects(&state).await;
 
     let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, JSON_TYPE.parse().unwrap());
+    if contains_html(&accept) {
+        let mime_value = if maybe_browser(&accept) {
+            mime::TEXT_HTML.to_string().parse().unwrap()
+        } else {
+            HTML_TYPE.parse().unwrap()
+        };
 
-    (headers, Json(response))
+        headers.insert(CONTENT_TYPE, mime_value);
+        (headers, template::render_simple(&projects)).into_response()
+    } else {
+        let response = model::SimpleResponse {
+            meta: model::SimpleMetadata {
+                api_version: "1.4".to_owned(),
+            },
+            projects,
+        };
+
+        headers.insert(CONTENT_TYPE, JSON_TYPE.parse().unwrap());
+        (headers, Json(response)).into_response()
+    }
 }
 
 pub async fn project(
     State(state): State<AppState>,
     headers: HeaderMap,
     Path(project): Path<String>,
-) -> (HeaderMap, Json<model::ProjectResponse>) {
-    let host = headers
-        .get("host")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("localhost");
+) -> impl IntoResponse {
+    let accept = get_header_value(&headers, ACCEPT.as_str(), JSON_TYPE);
+    let host = get_header_value(&headers, HOST.as_str(), "localhost");
 
-    let (files, versoins) = files(&state, &project, host).await;
-
-    let response = model::ProjectResponse {
-        meta: model::ProjectMetadata {
-            api_version: "1.4".to_owned(),
-        },
-        files,
-        name: project,
-        versions: Some(versoins.into_iter().collect()),
-        ..Default::default()
-    };
+    let (files, versoins) = files(&state, &project, &host).await;
 
     let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, JSON_TYPE.parse().unwrap());
+    if contains_html(&accept) {
+        let mime_value = if maybe_browser(&accept) {
+            mime::TEXT_HTML.to_string().parse().unwrap()
+        } else {
+            HTML_TYPE.parse().unwrap()
+        };
 
-    (headers, Json(response))
+        headers.insert(CONTENT_TYPE, mime_value);
+        (headers, template::render_project(&state.hash, &files)).into_response()
+    } else {
+        let response = model::ProjectResponse {
+            meta: model::ProjectMetadata {
+                api_version: "1.4".to_owned(),
+            },
+            files,
+            name: project,
+            versions: Some(versoins.into_iter().collect()),
+            ..Default::default()
+        };
+
+        headers.insert(CONTENT_TYPE, JSON_TYPE.parse().unwrap());
+        (headers, Json(response)).into_response()
+    }
 }
 
 pub async fn packages(
@@ -179,6 +203,60 @@ async fn compute_hash<D: Default + Digest>(path: &path::Path) -> Result<String, 
 
     let hash = hasher.finalize();
     Ok(hash.iter().map(|v| format!("{:02x}", v)).collect())
+}
+
+fn get_header_value(headers: &HeaderMap, name: &str, default: &str) -> String {
+    headers
+        .get(name)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or(default)
+        .to_string()
+}
+
+fn maybe_browser(accept: &str) -> bool {
+    for part in accept.split(',') {
+        let v = part.trim();
+        if let Ok(ty) = v.parse::<mime::Mime>()
+            && ty == mime::TEXT_HTML
+        {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn contains_html(accept: &str) -> bool {
+    for part in accept.split(',') {
+        let v = part.trim();
+        if let Ok(ty) = v.parse()
+            && is_html(ty)
+        {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn is_html(ty: mime::Mime) -> bool {
+    if ty == mime::STAR_STAR {
+        return false;
+    }
+
+    if ty == mime::TEXT_HTML {
+        return true;
+    }
+
+    if ty.type_() != mime::APPLICATION {
+        return false;
+    }
+
+    if ty.subtype() == mime::STAR {
+        return false;
+    }
+
+    ty.subtype() == mime::HTML || ty.suffix().unwrap_or(mime::JSON) == mime::HTML
 }
 
 fn normalize(name: &str) -> String {
