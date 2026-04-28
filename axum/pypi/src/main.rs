@@ -7,8 +7,9 @@ use axum::routing::get;
 use pypi::{AppState, package, packages, project, simple};
 use std::net::Ipv4Addr;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::net::TcpListener;
+use tokio::sync::Mutex;
 
 #[tokio::main]
 async fn main() {
@@ -20,7 +21,7 @@ async fn main() {
 
     let port: u16 = *matches.get_one::<u16>("PORT").unwrap();
 
-    let _hash: String = matches.get_one::<String>("HASH").unwrap().clone();
+    let hash: String = matches.get_one::<String>("HASH").unwrap().clone();
 
     let debug: bool = matches.get_flag("DEBUG");
 
@@ -29,6 +30,7 @@ async fn main() {
 
     let state = AppState {
         pkg: Arc::new(Mutex::new(pkg)),
+        hash,
         debug,
     };
 

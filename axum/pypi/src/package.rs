@@ -1,8 +1,11 @@
 use crate::error::Error;
 use regex::Regex;
+use std::collections::HashMap;
+use std::fs::Metadata;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
+use std::time::SystemTime;
 
 static SDIST_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
@@ -46,6 +49,9 @@ pub struct Package {
     pub distribution: String,
     pub version: String,
     pub size: usize,
+    pub created_at: Option<SystemTime>,
+    pub updated_at: Option<SystemTime>,
+    pub hashes: HashMap<String, String>,
     pub ty: PackageType,
 }
 
@@ -66,30 +72,53 @@ impl Packages {
 
             if metadata.is_file() {
                 if let Some((distribution, version)) = wheel_distribution(&filename) {
-                    let file = Package {
-                        path: entry.path(),
-                        filename,
-                        distribution,
-                        version,
-                        size: metadata.size() as usize,
-                        ty: PackageType::Wheel,
-                    };
+                    let file = Package::new(
+                        &entry.path(),
+                        &filename,
+                        &distribution,
+                        &version,
+                        &metadata,
+                        PackageType::Wheel,
+                    );
                     self.files.push(file);
                 } else if let Some((distribution, version)) = sdist_distribution(&filename) {
-                    let file = Package {
-                        path: entry.path(),
-                        filename,
-                        distribution,
-                        version,
-                        size: metadata.size() as usize,
-                        ty: PackageType::Sdist,
-                    };
+                    let file = Package::new(
+                        &entry.path(),
+                        &filename,
+                        &distribution,
+                        &version,
+                        &metadata,
+                        PackageType::Sdist,
+                    );
                     self.files.push(file);
                 }
             }
         }
 
         Ok(())
+    }
+}
+
+impl Package {
+    fn new(
+        path: &Path,
+        filename: &str,
+        distribution: &str,
+        version: &str,
+        metadata: &Metadata,
+        ty: PackageType,
+    ) -> Self {
+        Package {
+            path: path.to_path_buf(),
+            filename: filename.to_owned(),
+            distribution: distribution.to_owned(),
+            version: version.to_owned(),
+            size: metadata.size() as usize,
+            created_at: metadata.created().ok(),
+            updated_at: metadata.modified().ok(),
+            hashes: HashMap::new(),
+            ty,
+        }
     }
 }
 
