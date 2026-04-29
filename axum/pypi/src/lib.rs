@@ -2,6 +2,7 @@ pub mod error;
 pub mod model;
 pub mod package;
 pub mod template;
+pub mod version;
 
 use axum::Json;
 use axum::body::Body;
@@ -71,7 +72,9 @@ pub async fn project(
     let accept = get_header_value(&headers, ACCEPT.as_str(), JSON_TYPE);
     let host = get_header_value(&headers, HOST.as_str(), "localhost");
 
-    let (files, versoins) = files(&state, &project, &host).await;
+    let (files, versions) = files(&state, &project, &host).await;
+    let mut versions = versions.into_iter().collect::<Vec<version::Version>>();
+    versions.sort();
 
     let mut headers = HeaderMap::new();
     if contains_html(&accept) {
@@ -90,7 +93,7 @@ pub async fn project(
             },
             files,
             name: project,
-            versions: Some(versoins.into_iter().collect()),
+            versions: Some(versions.iter().map(|v| v.as_str().to_owned()).collect()),
             ..Default::default()
         };
 
@@ -141,7 +144,7 @@ async fn files(
     state: &AppState,
     project: &str,
     host: &str,
-) -> (Vec<model::ProjectFile>, HashSet<String>) {
+) -> (Vec<model::ProjectFile>, HashSet<version::Version>) {
     let mut pkg = state.pkg.lock().await;
     let hash = &state.hash;
 

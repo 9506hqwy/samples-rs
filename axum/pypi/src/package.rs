@@ -1,4 +1,5 @@
 use crate::error::Error;
+use crate::version::Version;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs::Metadata;
@@ -47,7 +48,7 @@ pub struct Package {
     pub path: PathBuf,
     pub filename: String,
     pub distribution: String,
-    pub version: String,
+    pub version: Version,
     pub size: usize,
     pub created_at: Option<SystemTime>,
     pub updated_at: Option<SystemTime>,
@@ -112,7 +113,7 @@ impl Package {
             path: path.to_path_buf(),
             filename: filename.to_owned(),
             distribution: distribution.to_owned(),
-            version: version.to_owned(),
+            version: Version::new(version).unwrap(),
             size: metadata.size() as usize,
             created_at: metadata.created().ok(),
             updated_at: metadata.modified().ok(),
