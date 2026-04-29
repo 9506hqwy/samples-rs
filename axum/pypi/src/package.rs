@@ -3,7 +3,10 @@ use crate::version::Version;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs::Metadata;
+#[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
+#[cfg(windows)]
+use std::os::windows::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use std::time::SystemTime;
@@ -114,7 +117,10 @@ impl Package {
             filename: filename.to_owned(),
             distribution: distribution.to_owned(),
             version: Version::new(version).unwrap(),
+            #[cfg(unix)]
             size: metadata.size() as usize,
+            #[cfg(windows)]
+            size: metadata.file_size() as usize,
             created_at: metadata.created().ok(),
             updated_at: metadata.modified().ok(),
             hashes: HashMap::new(),
