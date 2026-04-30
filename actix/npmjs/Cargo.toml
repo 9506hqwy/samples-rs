@@ -1,0 +1,25 @@
+[package]
+name = "npmjs"
+
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+actix-files = "0.6.10"
+actix-web = "4.13.0"
+chrono = { version = "0.4.44", features = ["alloc"] }
+clap = { version = "4.6.1", features = ["cargo"] }
+flate2 = "1.1.9"
+percent-encoding = "2.3.2"
+regex = "1.12.3"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sha1 = "0.11.0"
+tar = "0.4.45"
+tokio = { version = "1.52.1", features = ["fs"] }
+tokio-stream = "0.1.18"
+tokio-util = { version = "0.7.18", features = ["io"] }

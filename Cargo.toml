@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["axum/pypi", "pyo3/wsgi"]
+members = ["actix/npmjs","axum/pypi", "pyo3/wsgi"]
 
 [workspace.package]
 version = "0.1.0"
