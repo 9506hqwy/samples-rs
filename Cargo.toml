@@ -3,6 +3,7 @@ resolver = "3"
 members = [
   "actix/npmjs",
   "axum/pypi",
+  "crypto/aes256",
   "pyo3/wsgi",
   "rss/rss2md",
   "scraper/html2md",
