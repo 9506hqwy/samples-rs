@@ -4,6 +4,7 @@ members = [
   "actix/npmjs",
   "axum/pypi",
   "crypto/aes256",
+  "handlebars/helper",
   "pyo3/wsgi",
   "rss/rss2md",
   "scraper/html2md",
