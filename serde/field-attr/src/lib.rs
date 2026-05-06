@@ -213,7 +213,8 @@ mod tests {
 
         let abs_path = absolute(Path::new("file.txt")).unwrap();
         let result = serde_json::to_string(&field_attr).unwrap();
-        assert_eq!(result, format!(r#"{{"path":"{}"}}"#, abs_path.display()));
+        let path_json = serde_json::to_string(&abs_path).unwrap();
+        assert_eq!(result, format!(r#"{{"path":{}}}"#, path_json));
     }
 
     #[test]
