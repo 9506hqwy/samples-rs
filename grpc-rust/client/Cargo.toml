@@ -1,0 +1,21 @@
+[package]
+name = "grpc-client"
+
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[build-dependencies]
+tonic-prost-build = "0.14.6"
+
+[dependencies]
+prost = "0.14.3"
+prost-types = "0.14.3"
+rustls = "0.23.40"
+tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread"] }
+tokio-stream = "0.1.18"
+tonic = { version = "0.14.6", features = ["tls-ring"] }
+tonic-prost = "0.14.6"

@@ -4,6 +4,8 @@ members = [
   "actix/npmjs",
   "axum/pypi",
   "crypto/aes256",
+  "grpc-rust/client",
+  "grpc-rust/server",
   "handlebars/helper",
   "pyo3/wsgi",
   "rss/rss2md",

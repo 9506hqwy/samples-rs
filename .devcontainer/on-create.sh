@@ -8,6 +8,7 @@ sudo apt-get install -y \
     gcc-mingw-w64-x86-64-win32 \
     linux-perf \
     musl-tools \
+    protobuf-compiler \
     shellcheck \
     zstd
 
