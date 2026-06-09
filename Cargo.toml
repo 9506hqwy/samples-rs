@@ -11,6 +11,7 @@ members = [
   "rss/rss2md",
   "scraper/html2md",
   "serde/field-attr",
+  "windows/winrm",
   "windows/wmi",
 ]
 
