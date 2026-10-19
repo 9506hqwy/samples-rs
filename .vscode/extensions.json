@@ -5,6 +5,7 @@
         "github.vscode-github-actions",
         "rust-lang.rust-analyzer",
         "tamasfe.even-better-toml",
+        "task.vscode-task",
         "timonwong.shellcheck",
         "vadimcn.vscode-lldb",
         "yzhang.markdown-all-in-one"

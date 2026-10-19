@@ -1,15 +1,24 @@
 pre-commit:
   jobs:
     - name: Rust Format
-      glob: "*.rs"
+      glob:
+        - "*.rs"
+        - "Cargo.lock"
+        - "Cargo.toml"
       run: cargo fmt --all --check
 
     - name: Rust Lint
-      glob: "*.rs"
+      glob:
+        - "*.rs"
+        - "Cargo.lock"
+        - "Cargo.toml"
       run: cargo clippy --all-targets -- -Dwarnings
 
     - name: Rust Test
-      glob: "*.rs"
+      glob:
+        - "*.rs"
+        - "Cargo.lock"
+        - "Cargo.toml"
       run: cargo test
 
     - name: Actions Lint

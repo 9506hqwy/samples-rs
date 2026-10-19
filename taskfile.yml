@@ -1,0 +1,54 @@
+version: '3'
+
+tasks:
+  format:
+    cmds:
+      - cargo fmt --all --check
+
+  lint:
+    cmds:
+      - cargo clippy --all-targets -- -Dwarnings
+
+  debug-build:
+    cmds:
+      - cargo build --workspace --all-features
+      - cargo build --workspace --all-features --examples
+
+  debug-build-musl:
+    cmds:
+      - cargo build --target x86_64-unknown-linux-musl --workspace --all-features
+      - cargo build --target x86_64-unknown-linux-musl --workspace --all-features --examples
+
+  debug-build-win:
+    cmds:
+      - cargo build --target x86_64-pc-windows-gnu --workspace --all-features
+      - cargo build --target x86_64-pc-windows-gnu --workspace --all-features --examples
+
+  release-build:
+    cmds:
+      - cargo build --release --workspace --all-features
+      - cargo build --release --workspace --all-features --examples
+
+  test:
+    cmds:
+      - cargo test
+
+  deps-update:
+    cmds:
+      - cargo upgrade
+
+  license-check:
+    cmds:
+      - rm -rf artifacts/licenses
+      - mkdir -p artifacts/licenses
+      - ./tools/cargo-licenses.sh -o artifacts/licenses --target all
+
+  doc-gen:
+    cmds:
+      - cargo doc
+
+  sbom-gen:
+    cmds:
+      - mkdir -p artifacts
+      - find ./artifacts -name "*.sbom.json" -delete
+      - ./tools/cargo-sbom.sh -o artifacts --all-features -a --no-build-deps

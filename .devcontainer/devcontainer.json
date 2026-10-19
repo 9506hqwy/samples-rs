@@ -3,15 +3,6 @@
     "name": "Rust",
     // Base Container Image.
     "image": "mcr.microsoft.com/devcontainers/rust:2-1-trixie",
-    // For running using Podman.
-    // https://github.com/microsoft/vscode-remote-release/issues/4443
-    "runArgs": [
-        "--userns=keep-id"
-    ],
-    "securityOpt": [
-        "label=disable",
-        "seccomp=unconfined"
-    ],
     // Use 'onCreateCommand' to run commands after the container is created.
     "onCreateCommand": "/bin/bash ${containerWorkspaceFolder}/.devcontainer/on-create.sh",
     // Set session environment variables.
