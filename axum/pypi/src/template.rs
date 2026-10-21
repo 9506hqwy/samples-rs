@@ -1,4 +1,5 @@
 use crate::model;
+use minijinja::value::{Serde, Value};
 use minijinja::{Environment, context};
 
 const SIMPLE_TEMPLATE: &str = r#"<Doctype html>
@@ -32,7 +33,8 @@ pub fn render_simple(projects: &[model::SimpleProject]) -> String {
     env.add_template("simple", SIMPLE_TEMPLATE).unwrap();
 
     let tmpl = env.get_template("simple").unwrap();
-    tmpl.render(context!(projects => projects)).unwrap()
+    tmpl.render(context!(projects => Value::from(Serde(projects))))
+        .unwrap()
 }
 
 pub fn render_project(hash: &str, packages: &[model::ProjectFile]) -> String {
@@ -40,6 +42,6 @@ pub fn render_project(hash: &str, packages: &[model::ProjectFile]) -> String {
     env.add_template("project", PROJECT_TEMPLATE).unwrap();
 
     let tmpl = env.get_template("project").unwrap();
-    tmpl.render(context!(hash => hash, packages => packages))
+    tmpl.render(context!(hash => hash, packages => Value::from(Serde(packages))))
         .unwrap()
 }
